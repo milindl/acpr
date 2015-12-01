@@ -132,6 +132,6 @@ int main() {
 		//imshow("Thresh", holded); 
 		key=waitKey(30); 
 	}
-	imshow("final", src+final2); 
+	imshow("final", src+final2 + final1); 
 	waitKey(0); 
 }
