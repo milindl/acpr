@@ -8,6 +8,8 @@ using namespace std;
 using namespace cv;
 
 Mat src,hsv, holded, holded1; 
+Mat final1, final2; 
+int flag=0, flag2=0; 
 
 int main() {
 	VideoCapture cam(1); 
@@ -65,8 +67,15 @@ int main() {
      		{
 
 			if(mu[i].m00<minArea || mu[i].m00>maxArea) continue; 
+			if(flag==1) continue; 
 			//Rect r = boundingRect(contours[i]); 
 			RotatedRect r1 = minAreaRect( Mat(contours[i])); 	
+			float modAngle = r1.angle>0?r1.angle:-r1.angle; 
+			float ht = r1.size.height; 
+			float wt = r1.size.width; 
+			float ratio = ht/wt;
+			if(modAngle<75 && modAngle>15) continue; 	
+			if(ratio<0.8 || ratio >1.2) continue;
 			Point2f r[4]; r1.points(r);
 			for( int j = 0; j < 4; j++ ){ 
           			line( drawing, r[j], r[(j+1)%4], Scalar(255,255,0), 2, 8 ); 
@@ -78,6 +87,10 @@ int main() {
 			s = out.str();
 			putText(drawing, s, mc[i], 1,1, Scalar(255,255,255)); 
 			k++;  			
+			if(k==32) {
+				flag=1; 
+				drawing.copyTo(final1); 
+				}
 			//rectangle(drawing, r, Scalar(0,255,255)); 
 	//		drawContours( drawing, contours, i, Scalar(0,0,255), 2, 8, hierarchy, 0, Point());       			
 			//circle( drawing, mc[i], 4, Scalar(0,255,255), -1, 8, 0 );
@@ -87,8 +100,15 @@ int main() {
      		{
 
 			if(mu1[i].m00<minArea || mu1[i].m00>maxArea) continue; 
+			if(flag2==1) continue; 
 			//Rect r = boundingRect(contours[i]); 
-			RotatedRect r1 = minAreaRect( Mat(contours1[i])); 	
+			RotatedRect r1 = minAreaRect( Mat(contours1[i])); 
+			float modAngle = r1.angle>0?r1.angle:-r1.angle; 
+			float ht = r1.size.height; 
+			float wt = r1.size.width; 
+			float ratio = ht/wt;
+			if(modAngle<75 && modAngle>15) continue; 
+			if(ratio<0.8 || ratio>1.2) continue;	
 			Point2f r[4]; r1.points(r);
 			for( int j = 0; j < 4; j++ ){ 
           			line( drawing, r[j], r[(j+1)%4], Scalar(0,0,255), 2, 8 );
@@ -98,13 +118,20 @@ int main() {
 			out << k;
 			s = out.str();
 			putText(drawing, s, mc1[i], 1,1, Scalar(255,0,255)); 
-			k++;  				
+			k++;  		
+			if(k==32) {
+			flag2=1;
+			drawing.copyTo(final2);
+			}	
 			//rectangle(drawing, r, Scalar(0,255,255)); 
 	//		drawContours( drawing, contours, i, Scalar(0,0,255), 2, 8, hierarchy, 0, Point());       			
 			//circle( drawing, mc[i], 4, Scalar(0,255,255), -1, 8, 0 );
      		}
+		
 		imshow("COM", src+drawing); 
-		imshow("Thresh", holded); 
+		//imshow("Thresh", holded); 
 		key=waitKey(30); 
 	}
+	imshow("final", src+final2); 
+	waitKey(0); 
 }
