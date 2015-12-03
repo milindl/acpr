@@ -80,11 +80,11 @@ int *populate_board(Mat original_board, Mat final_board, RotatedRect *rects) {
 	for(int i = 0; i!=64; i++) { //Loop thru rects
 			for(int j =0; j!=32; j++)  { //Loop thru all points
 					bool result = inside_rect(rects[i], CoMs_blue[j]); 
-					if(result==true) loc[i] = 2; 
+					if(result==true) loc[i] = 1; 
 				}
 			for(int j =0; j!=32; j++)  { //Loop thru all points
 					bool result = inside_rect(rects[i], CoMs_yellow[j]); 
-					if(result==true) loc[i] = 1; 
+					if(result==true) loc[i] = 3; 
 				}
 		}
 	return loc; 
