@@ -28,36 +28,62 @@ int *populate_board(Mat original_board, Mat final_board, RotatedRect *rects) {
 	/* subtraction */
 	Mat subtracted; 
 	absdiff(original_board, final_board, subtracted); 
-	
 	imshow("subtracted", subtracted); 
 	waitKey(0); 
 	cvtColor(subtracted, subtracted, CV_BGR2GRAY); 
 	threshold(subtracted, subtracted, 15, 255, THRESH_BINARY); 
 	medianBlur(subtracted, subtracted, 15); 	
 	
-	imshow("subtracted", subtracted); 
+	//HERE I WILL MASK AND SHOW BECAUSE I CAN BRO
+	Mat binaried; 
+	final_board.copyTo(binaried, subtracted); 
+	//imshow("binaried", binaried); 
+	waitKey(0); 
+	Mat goti1, goti2; 
+	inRange(binaried, Scalar(80, 0,40), Scalar(179, 255, 255), goti1); 
+	threshold(goti1, goti1, 15, 255, THRESH_BINARY);
+	medianBlur(goti1, goti1, 15); 	 
+	imshow("goti1", goti1); 
+	inRange(binaried, Scalar(0, 0,40), Scalar(80, 255, 255), goti2); 
+	threshold(goti2, goti2, 15, 255, THRESH_BINARY); 
+	medianBlur(goti2, goti2, 15); 	
+	imshow("goti2", goti2); 
+	
 	waitKey(0); 
 	/* end subtraction */ 
 
-	/* find contours and centre of masses */ 
-	vector<vector<Point> > contours; vector<Vec4i> hierarchy; 
-	findContours(subtracted, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+	/* find contours and centre of masses for yellow and blue separately */ 
+	vector<vector<Point> > contours_blue, contours_yellow; vector<Vec4i> hierarchy_b, hierarchy_y; 
+	findContours(goti1, contours_blue, hierarchy_b, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+	findContours(goti2, contours_yellow, hierarchy_y, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 	Mat drawing= Mat::zeros(original_board.size(), CV_8UC3); 
-	vector<Point2f> CoMs(64); 
-	for(int i=0; i!=contours.size(); i++) {
-			Moments m = moments(contours[i], false); 
+	vector<Point2f> CoMs_blue(32), CoMs_yellow(32); 
+	for(int i=0; i!=contours_blue.size(); i++) {
+			Moments m = moments(contours_blue[i], false); 
 			float CoM_x = m.m10/m.m00; 
 			float CoM_y = m.m01/m.m00; 
-			CoMs[i] = Point2f(CoM_x, CoM_y); 
-			circle(drawing, Point(CoM_x, CoM_y), 2, Scalar(0,0,255), -1,8,0); 
+			CoMs_blue[i] = Point2f(CoM_x, CoM_y); 
+			circle(drawing, Point(CoM_x, CoM_y), 2, Scalar(255,0,0), -1,8,0); 
+		}	
+		
+	for(int i=0; i!=contours_yellow.size(); i++) {
+			Moments m = moments(contours_yellow[i], false); 
+			float CoM_x = m.m10/m.m00; 
+			float CoM_y = m.m01/m.m00; 
+			CoMs_yellow[i] = Point2f(CoM_x, CoM_y); 
+			circle(drawing, Point(CoM_x, CoM_y), 2, Scalar(0,255,255), -1,8,0); 
 		}	
 	imshow("..", original_board+drawing); 
 	
 	
 	waitKey(0); 
 	for(int i = 0; i!=64; i++) { //Loop thru rects
-			for(int j =0; j!=64; j++)  { //Loop thru all points
-					bool result = inside_rect(rects[i], CoMs[j]); 
+			for(int j =0; j!=32; j++)  { //Loop thru all points
+					bool result = inside_rect(rects[i], CoMs_blue[j]); 
+					if(result==true) loc[i] = 2; 
+				}
+			for(int j =0; j!=32; j++)  { //Loop thru all points
+					bool result = inside_rect(rects[i], CoMs_yellow[j]); 
 					if(result==true) loc[i] = 1; 
 				}
 		}
@@ -114,8 +140,6 @@ bool inside_rect(RotatedRect r, Point2f p) {
 		return result>0?true:false; 
 	}
 
-
-/* This function returns an array of RotatedRects containing the chess blocks */ 
 RotatedRect *label(VideoCapture cam) {
 	char key; //to quit
 	RotatedRect *rects = (RotatedRect *)malloc(64 * sizeof(RotatedRect)); 
@@ -141,8 +165,8 @@ RotatedRect *label(VideoCapture cam) {
 		//Read and threshold image. Clean up. 
 		cam.read(src);
 		cvtColor(src,hsv, CV_BGR2HSV); 
-		inRange(hsv, Scalar(20, sL, vL), Scalar(50, sH,vH),holded); 
-		inRange(hsv, Scalar(120, sL1, vL1), Scalar(150, sH1,vH1),holded1); 
+		inRange(hsv, Scalar(0, sL, vL), Scalar(179, sH,vH),holded); 
+		inRange(hsv, Scalar(0, sL1, vL1), Scalar(179, sH1,vH1),holded1); 
 		medianBlur(holded, holded, 15); 
 		medianBlur(holded1, holded1, 15);
 
@@ -242,6 +266,7 @@ RotatedRect *label(VideoCapture cam) {
 	waitKey(0); 
 	return sorting(rects, 64);
 }
+
 
 int main() {
 	Mat o,t; 
