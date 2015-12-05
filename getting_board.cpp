@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>
+#include "sort_board_as_per_location.h"
 using namespace std;
 using namespace cv;
 
@@ -105,13 +106,19 @@ RotatedRect *label(VideoCapture cam) {
 	//Start main loop: 
 	while(key!=27) {
 		//Read and threshold image. Clean up. 
+		
 		cam.read(src);
 		cvtColor(src,hsv, CV_BGR2HSV); 
-		inRange(hsv, Scalar(0, sL, vL), Scalar(179, sH,vH),holded); 
-		inRange(hsv, Scalar(0, sL1, vL1), Scalar(179, sH1,vH1),holded1); 
+		inRange(hsv, Scalar(0, sL, vL), Scalar(60, sH,vH),holded); 
+		//threshold(holded, holded, 15, 255, THRESH_BINARY); 
+		inRange(hsv, Scalar(70, sL1, vL1), Scalar(179, sH1,vH1),holded1); 
+		//threshold(holded1, holded1, 12, 255, THRESH_BINARY); 
 		medianBlur(holded, holded, 15); 
 		medianBlur(holded1, holded1, 15);
-
+		//imshow("holded_for_white", holded); 
+		//imshow("holded_for_black", holded1);
+		waitKey(33); 
+		//destroyAllWindows();  
 		//Fiond contours for black and white , find moments		
 		vector<vector<Point> > contours; 		
 		vector<Vec4i> hierarchy;	
@@ -151,6 +158,7 @@ RotatedRect *label(VideoCapture cam) {
 			if(flag==1) continue; 
 			if(checkContour(contours[i])==false) continue; 
 			RotatedRect r1 = minAreaRect( Mat(contours[i])); 	
+			waitKey(1); 
 			/* start drawing functions */
 			Point2f r[4]; r1.points(r);
 			for( int j = 0; j < 4; j++ ){ 
@@ -163,6 +171,7 @@ RotatedRect *label(VideoCapture cam) {
 			s = out.str();
 			putText(drawing, s, mc[i], 1,1, Scalar(255,255,255)); 
 			rects[k] = r1; 
+			
 			/* end drawing functions */ 
 			k++;  			
 			if(k==32) { //k=32 implies we are finished with the chess blocks
@@ -171,7 +180,11 @@ RotatedRect *label(VideoCapture cam) {
 			}
 	
      		}	
-
+		sort_array_y(rects, 32); 
+		for(int m=0; m!=8; m++) {
+			sort_array_x(rects+(4*m), 4); 
+		}
+		print_array(rects, 32); 
 		k=0;	//reset white/black counter for black 
 		for( int i = 0; i< contours1.size(); i++ )
      		{
@@ -179,7 +192,7 @@ RotatedRect *label(VideoCapture cam) {
 			if(flag2==1) continue;			
 			if(checkContour(contours1[i])==false) continue; 
 			RotatedRect r1 = minAreaRect( Mat(contours1[i])); 
-
+			waitKey(1); 
 			/* start drawing functions */	
 			Point2f r[4]; r1.points(r);
 			for( int j = 0; j < 4; j++ ){ 
@@ -199,6 +212,11 @@ RotatedRect *label(VideoCapture cam) {
 				drawing.copyTo(final2);
 			}	
      		}
+     	sort_array_y(rects+32, 32); 
+			for(int m=0; m!=8; m++) {
+				sort_array_x(32+rects+(4*m), 4); 
+			}
+		print_array(rects+32, 32); 
 		
 		imshow("COM", src+drawing); //Display current drawn imgs
 		key=waitKey(30); 
