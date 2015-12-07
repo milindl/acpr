@@ -227,16 +227,20 @@ imshow("final", src+final2); //display the final contours
 	//Here I need to populate the white array ie the 0-31 of rects. 32-63 is already populated. 
 	int flg = 1; 
 	int ctr=0; //count ofthe rectangles
-	float widths[8]; 
+	float widths[8]={0,0,0,0,0,0,0,0}; 
 	for(int i=0; i!=8; i++) {
 		for(int j=0; j!=4; j++) {
 			widths[i]+=rects[32+4*i+j].size.width; 
+			//This average is the problem. 
+			//Messes up everything! 
+			cerr<<"Width of "<<32+4*i+j<<"th width is equal to "<<rects[32+4*i+j].size.width<<endl; 
 			}
+			cerr<<"Sum of widths in this case is equal to"<<widths[i]<<endl; 
 			widths[i]/=4; 
+			cerr<<"Average of widths in this case is equal to"<<widths[i]<<endl; 
 		}
 	for(int j = 32; j!=64; j++) {
 			int i = j-32; 
-			float width = rects[j].size.width;
 			float centerX = rects[j].center.x, centerY = rects[j].center.y;
 			Point2f p; 
 			p.y = centerY; 	
@@ -245,10 +249,10 @@ imshow("final", src+final2); //display the final contours
 				}  else {
 					p.x = centerX + widths[i%4]; 
 				}
-				cerr<<"Rectangle created at centerX, centerY, Width "<<rects[i].center.x<<" "<<rects[i].center.y<<" "<<endl;
 			RotatedRect rn(p, rects[j].size, rects[j].angle); 
 			rects[i] = rn; 
-			ctr++; 
+			ctr++;
+			cerr<<"Rectangle created at centerX, centerY, Width "<<rects[i].center.x<<" "<<rects[i].center.y<<" "<<endl; 
 			if(ctr%4==0) flg=!flg; 
 			
 		}
